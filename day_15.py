@@ -47,6 +47,8 @@ class AStarAlgorithm:
     def find_cost_of_best_path(self):
         nodes = [self._create_starting_node()]
         while not self._is_target_reached(nodes):
+            if self._current_node.coords in self._visited_points:
+                continue
             for x, y in neighbours_of_point(self._map, *self._current_node.coords):
                 if (x, y) in self._visited_points:
                     continue
@@ -69,17 +71,8 @@ class AStarAlgorithm:
     def _update_cost_of_neighbour(self, neighbour, nodes):
         x, y = neighbour
         risk = self._map[y][x]
-        indexed_node = next(filter(lambda n: n[1].coords == neighbour, enumerate(nodes)), None)
         evaluated_cost = self._current_node.cost + risk
-        if indexed_node is not None:
-            idx, node = indexed_node
-            if node.cost > evaluated_cost:
-                node.cost = evaluated_cost
-                del nodes[idx]
-                heapq.heappush(nodes, node)
-        else:
-            node = Node(neighbour, risk, evaluated_cost, calculate_heuristic(self._map, neighbour))
-            heapq.heappush(nodes, node)
+        heapq.heappush(nodes, Node(neighbour, risk, evaluated_cost, calculate_heuristic(self._map, neighbour)))
 
 
 def transform_risk(value):
@@ -116,7 +109,6 @@ def resolve_part1(input):
 
 
 def resolve_part2(input):
-    # this takes a while :(
     risk_levels = parse_risk_level_map(input)
     extend_map(risk_levels)
     return AStarAlgorithm(risk_levels).find_cost_of_best_path()
